@@ -223,6 +223,9 @@ function open_help_viewer(options) {
 		$iframe.attr({ src: "help/default.html" });
 	}));
 	$contents.append($default_item_li);
+	$(E("li")).addClass("page").append($Item("Archipelago Help").on("click", () => {
+		$iframe.attr({ src: "help/archipelago.html" });
+	})).appendTo($contents);
 
 	function renderItem(source_li, $folder_items_ul) {
 		const object = parse_object_params($(source_li).children("object"));
