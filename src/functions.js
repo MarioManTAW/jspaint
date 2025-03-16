@@ -2118,18 +2118,17 @@ function calculate_similarity() {
 
 function calculate_logic_similarity() {
 	var items = received();
-	var r = items.filter(x => x == "Progressive Color Depth (Red)").length;
-	var g = items.filter(x => x == "Progressive Color Depth (Green)").length;
-	var b = items.filter(x => x == "Progressive Color Depth (Blue)").length;
-	var w = items.filter(x => x == "Progressive Canvas Width").length;
-	var h = items.filter(x => x == "Progressive Canvas Height").length;
+	var r = Math.min(items.filter(x => x == "Progressive Color Depth (Red)").length, 7);
+	var g = Math.min(items.filter(x => x == "Progressive Color Depth (Green)").length, 7);
+	var b = Math.min(items.filter(x => x == "Progressive Color Depth (Blue)").length, 7);
+	var w = Math.min(items.filter(x => x == "Progressive Canvas Width").length, 4);
+	var h = Math.min(items.filter(x => x == "Progressive Canvas Height").length, 3);
 	var p = items.includes("Pick Color");
 	if (!p) {
 		r = Math.min(r, 2);
 		g = Math.min(g, 2);
 		b = Math.min(b, 2);
 	}
-	Array.from({ length: r + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b);
 	return Math.floor(((Array.from({ length: r + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b) +
 		Array.from({ length: g + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b) +
 		Array.from({ length: b + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b)) *

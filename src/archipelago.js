@@ -70,10 +70,10 @@ function update() {
 				$('[title="' + x.name + '"]').removeClass("disabled");
 				break;
 			case "Progressive Canvas Width":
-				w += 100;
+				if (w < 800) w += 100;
 				break;
 			case "Progressive Canvas Height":
-				h += 100;
+				if (h < 600) h += 100;
 				break;
 		}
 	}
