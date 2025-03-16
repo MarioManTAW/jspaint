@@ -20,6 +20,7 @@ $("<button>Connect!</button>").on("click", function () {
 		.then(function (e) {
 			console.log("Connected to the Archipelago server!", e);
 			slotData = e;
+			$goal_image.src = "images/archipelago/" + slotData.goal_image + ".png";
 			update();
 			client.items.on("itemsReceived", function (items) {
 				for (var item of items) {

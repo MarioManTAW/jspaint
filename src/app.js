@@ -426,10 +426,11 @@ const canvas_handles = new Handles({
 window.canvas_handles = canvas_handles;
 
 const $goal = $(goal_canvas).css("left", "810px").appendTo($canvas_area);
-var goal_image = new Image();
-goal_image.onload = function () { goal_ctx.drawImage(this, 0, 0) };
-goal_image.src = "images/archipelago/1.png";
+var $goal_image = new Image();
+$goal_image.onload = function () { goal_ctx.drawImage(this, 0, 0, 800, 600); };
+$goal_image.src = "images/archipelago/1.png";
 window.$goal = $goal;
+window.$goal_image = $goal_image;
 
 const $diff = $(diff_canvas).css("left", "810px").appendTo($canvas_area);
 window.$diff = $diff;

@@ -33,8 +33,8 @@ const menus = {
 				"show file picker", "show file chooser", "show file browser", "show finder",
 				"browser for file", "browse for a file", "browse for an image", "browse for an image file",
 			],
-			enabled: false,
-			action: () => { /*file_open();*/ },
+			enabled: true,
+			action: () => { file_open(); },
 			description: localize("Opens an existing document."),
 		},
 		{
