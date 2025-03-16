@@ -1,6 +1,7 @@
 import { Client } from "../lib/archipelago.min.js";
 import { $ColorBox } from "./$ColorBox.js";
-import { resize_canvas_without_saving_dimensions } from "./functions.js";
+import { clear, image_invert_colors, reset_canvas_and_history, resize_canvas_without_saving_dimensions, undo } from "./functions.js";
+import { flip_horizontal, flip_vertical } from "./image-manipulation.js";
 
 // Create a new instance of the Client class.
 const client = new Client();
@@ -20,7 +21,30 @@ $("<button>Connect!</button>").on("click", function () {
 			console.log("Connected to the Archipelago server!", e);
 			slotData = e;
 			update();
-			client.items.on("itemsReceived", function (x) { update() });
+			client.items.on("itemsReceived", function (items) {
+				for (var item of items) {
+					if (item.trap) {
+						switch (item.name) {
+							case "Undo Trap":
+								undo();
+								break;
+							case "Clear Image Trap":
+								clear();
+								break;
+							case "Invert Colors Trap":
+								image_invert_colors();
+								break;
+							case "Flip Horizontal Trap":
+								flip_horizontal();
+								break;
+							case "Flip Vertical Trap":
+								flip_vertical();
+								break;
+						}
+					}
+				}
+				update();
+			});
 			$ap_options_window.hide();
 		})
 		.catch(console.error)
