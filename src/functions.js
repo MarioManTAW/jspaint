@@ -1986,6 +1986,8 @@ function render_history_as_gif() {
  */
 function go_to_history_node(target_history_node, canceling) {
 	const from_history_node = current_history_node;
+	var w = main_canvas.width;
+	var h = main_canvas.height;
 
 	if (!target_history_node.image_data) {
 		if (!canceling) {
@@ -2087,6 +2089,10 @@ function go_to_history_node(target_history_node, canceling) {
 	}
 	// window.console?.log("new undos:", undos);
 	// window.console?.log("new redos:", redos);
+
+	if (w != main_canvas.width || h != main_canvas.height) {
+		resize_canvas_without_saving_dimensions(w, h);
+	}
 
 	$canvas_area.trigger("resize");
 	$G.triggerHandler("session-update"); // autosave
