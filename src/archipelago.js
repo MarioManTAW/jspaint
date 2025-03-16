@@ -22,6 +22,17 @@ $("<button>Connect!</button>").on("click", function () {
 			slotData = e;
 			$goal_image.src = "images/archipelago/" + slotData.goal_image + ".png";
 			update();
+			if (slotData.death_link) {
+				console.log("Linked");
+				client.deathLink.enableDeathLink();
+				client.deathLink.on("deathReceived", function () {
+					reset_canvas_and_history();
+					update();
+				})
+			} else console.log("unlinked");
+			client.messages.on("message", function (message) {
+				$("#text-log").append("<br>" + message);
+			})
 			client.items.on("itemsReceived", function (items) {
 				for (var item of items) {
 					if (item.trap) {
@@ -106,5 +117,41 @@ function update() {
 	$ColorBox.build_palette(palette);
 }
 
-export { received, send, slotData };
+function deathlink(method) {
+	if (slotData.death_link) {
+		switch (method) {
+			case "undo":
+				client.deathLink.sendDeathLink(client.name, client.name + " made a minor mistake.");
+				break;
+			case "clear":
+				client.deathLink.sendDeathLink(client.name, client.name + " decided to start over.");
+				break;
+			default:
+				client.deathLink.sendDeathLink(client.name);
+				break;
+		}
+	}
+}
+
+/** @type {OSGUI$Window} */
+let $text_client_window;
+
+function show_text_client() {
+	if ($text_client_window) {
+		$text_client_window.close();
+		$("#ap-command").off("keyup");
+	}
+	$text_client_window = $Window({ title: localize("Archipelago Text Client"), resizable: true });
+	$text_client_window.$content.append($("#text-client").css("display", "flex"));
+	$text_client_window.center();
+	$("#ap-command").on("keyup", function (e) {
+		console.log(e);
+		if (e.key == "Enter" && $("#ap-command").val().trim()) {
+			client.messages.say($("#ap-command").val());
+			$("#ap-command").val("");
+		}
+	});
+}
+
+export { deathlink, received, send, show_text_client, slotData };
 

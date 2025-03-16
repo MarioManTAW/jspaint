@@ -7,7 +7,7 @@ import { $DialogWindow } from "./$ToolWindow.js";
 import { OnCanvasHelperLayer } from "./OnCanvasHelperLayer.js";
 import { OnCanvasSelection } from "./OnCanvasSelection.js";
 import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
-import { received, send, slotData } from "./archipelago.js";
+import { deathlink, received, send, slotData } from "./archipelago.js";
 // import { localize } from "./app-localization.js";
 import { default_palette } from "./color-data.js";
 import { image_formats } from "./file-format-data.js";
@@ -655,8 +655,8 @@ function reset_canvas_and_history() {
 	});
 	history_node_to_cancel_to = null;
 
-	main_canvas.width = Math.max(1, my_canvas_width);
-	main_canvas.height = Math.max(1, my_canvas_height);
+	//main_canvas.width = Math.max(1, my_canvas_width);
+	//main_canvas.height = Math.max(1, my_canvas_height);
 	main_ctx.disable_image_smoothing();
 	main_ctx.fillStyle = selected_colors.background;
 	main_ctx.fillRect(0, 0, main_canvas.width, main_canvas.height);
@@ -2232,6 +2232,8 @@ function undo() {
 
 	go_to_history_node(target_history_node);
 
+	deathlink("undo");
+
 	return true;
 }
 
@@ -2757,6 +2759,7 @@ function clear() {
 			main_ctx.fillStyle = selected_colors.background;
 			main_ctx.fillRect(0, 0, main_canvas.width, main_canvas.height);
 		}
+		deathlink("clear");
 	});
 }
 
