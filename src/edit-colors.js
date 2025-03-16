@@ -262,8 +262,8 @@ function choose_color(initial_color, callback) {
 		return $color_grid;
 	};
 	const $left_right_split = $(`<div class="left-right-split">`).appendTo($w.$main);
-	const $left = $(`<div class="left-side">`).appendTo($left_right_split);
-	const $right = $(`<div class="right-side">`).appendTo($left_right_split).hide();
+	const $left = $(`<div class="left-side">`);//.appendTo($left_right_split);
+	const $right = $(`<div class="right-side">`).appendTo($left_right_split);//.hide();
 	$left.append(`<label for="basic-colors">${render_access_key("&Basic colors:")}</label>`);
 	const $basic_colors_grid = make_color_grid(basic_colors, "basic-colors").appendTo($left);
 	$left.append(`<label for="custom-colors">${render_access_key("&Custom colors:")}</label>`);
@@ -614,7 +614,7 @@ function choose_color(initial_color, callback) {
 
 	const $add_to_custom_colors_button = $(`<button class="add-to-custom-colors-button" type="button">`)
 		.html(render_access_key("&Add To Custom Colors"))
-		.appendTo($right)
+		//.appendTo($right)
 		.on("click", (event) => {
 			// prevent the form from submitting
 			// @TODO: instead, prevent the form's submit event in $Window.js in os-gui (or don't have a form? idk)
@@ -637,7 +637,7 @@ function choose_color(initial_color, callback) {
 		$w.close();
 	});
 
-	$left.append($w.$buttons);
+	$right.append($w.$buttons.addClass("add-to-custom-colors-button"));
 
 	// Initially select the first color cell that matches the color to edit, if any
 	// (first in the basic colors, then in the custom colors otherwise.

@@ -1596,3 +1596,4 @@ export {
 };
 // Temporary globals until all dependent code is converted to ES Modules
 window.TOOL_PENCIL = TOOL_PENCIL; // used by app-state.js
+window.TOOL_BRUSH = TOOL_BRUSH; // used by app-state.js

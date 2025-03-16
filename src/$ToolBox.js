@@ -1,8 +1,9 @@
 // @ts-check
 /* global $canvas, $left, $right, $status_text, get_direction, localize, main_canvas, return_to_tools, selected_tool, selected_tools */
 import { $Component } from "./$Component.js";
+import { received } from "./archipelago.js";
 // import { get_direction, localize } from "./app-localization.js";
-import { select_tool, select_tools } from "./functions.js";
+import { select_tool } from "./functions.js";
 import { $G, E, make_css_cursor } from "./helpers.js";
 import { get_theme } from "./theme.js";
 
@@ -26,6 +27,7 @@ function $ToolBox(tools, is_extras) {
 
 	const $buttons = $($.map(tools, (tool, i) => {
 		const $b = $(E("div")).addClass("tool");
+		if (!(["Magnifier", "Brush"].includes(tool.name) || received().includes(tool.name))) $b.addClass("disabled");
 		$b.appendTo($tools);
 		tool.$button = $b;
 
@@ -60,7 +62,8 @@ function $ToolBox(tools, is_extras) {
 		$G.on("theme-load resize", update_css);
 
 		$b.on("click", (e) => {
-			if (e.shiftKey || e.ctrlKey) {
+			if (!$b.hasClass('disabled')) select_tool(tool);
+			/*if (e.shiftKey || e.ctrlKey) {
 				select_tool(tool, true);
 				return;
 			}
@@ -68,7 +71,7 @@ function $ToolBox(tools, is_extras) {
 				select_tools(return_to_tools);
 			} else {
 				select_tool(tool);
-			}
+			}*/
 		});
 
 		$b.on("pointerenter", () => {
@@ -111,6 +114,9 @@ function $ToolBox(tools, is_extras) {
 		$tool_options.children().trigger("update");
 		$canvas.css({
 			cursor: make_css_cursor(...selected_tool.cursor),
+		});
+		$goal.css({
+			cursor: selected_tool.name == "Pick Color" ? make_css_cursor(...selected_tool.cursor) : "",
 		});
 	};
 	$c.update_selected_tool();

@@ -115,6 +115,7 @@ class LocalSession {
 		const ls_key = `image#${session_id}`;
 		log(`Local storage key: ${ls_key}`);
 		// save image to storage
+		return;
 		this.save_image_to_storage_immediately = () => {
 			const save_paused = handle_data_loss();
 			if (save_paused) {

@@ -196,6 +196,19 @@ body,
 	background-image: url("../../images/classic/tools.svg");
 	background-position: calc(-16px * (var(--icon-index) * 2 + 1)) -16px;
 }
+.tool.disabled, .tool.disabled:hover:active {
+	border-color: red;
+	border-style: solid;
+	border-width: 2px;
+	background-image: linear-gradient(to bottom right, transparent 45%, red 45% 55%, transparent 55% 100%);
+	cursor: not-allowed;
+}
+.tool.disabled::before {
+	border: none;
+}
+.tool.disabled .tool-icon {
+	background-image: none;
+}
 
 .tools {
 	height: 200px;

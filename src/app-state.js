@@ -14,10 +14,10 @@
 const default_magnification = 1;
 
 /** @type {Tool} */
-const default_tool = window.get_tool_by_id(window.TOOL_PENCIL);
+const default_tool = window.get_tool_by_id(window.TOOL_BRUSH);
 
-const default_canvas_width = 683;
-const default_canvas_height = 384;
+const default_canvas_width = 400;
+const default_canvas_height = 300;
 let my_canvas_width = default_canvas_width;
 let my_canvas_height = default_canvas_height;
 
@@ -33,6 +33,19 @@ const main_canvas = window.make_canvas();
 main_canvas.classList.add("main-canvas");
 /** @type {PixelContext} */
 const main_ctx = main_canvas.ctx;
+
+/** @type {PixelCanvas} */
+const goal_canvas = window.make_canvas(800, 600);
+goal_canvas.classList.add("goal-canvas");
+/** @type {PixelContext} */
+const goal_ctx = goal_canvas.ctx;
+
+/** @type {PixelCanvas} */
+const diff_canvas = window.make_canvas(800, 600);
+diff_canvas.classList.add("goal-canvas");
+diff_canvas.style.display = "none";
+/** @type {PixelContext} */
+const diff_ctx = diff_canvas.ctx;
 
 /** @type {(string | CanvasPattern)[]} */
 let palette = window.default_palette;

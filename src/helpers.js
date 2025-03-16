@@ -400,7 +400,7 @@ function to_canvas_coords({ clientX, clientY }) {
 	}
 	const rect = window.canvas_bounding_client_rect;
 	return {
-		x: ~~((clientX - rect.left) / rect.width * main_canvas.width),
+		x: ~~((clientX - rect.left) / rect.width * main_canvas.width) % 810,
 		y: ~~((clientY - rect.top) / rect.height * main_canvas.height),
 	};
 }
@@ -418,11 +418,7 @@ function from_canvas_coords({ x, y }) {
 // #endregion
 
 export {
-	$G,
-	E,
-	TAU,
-	debounce,
-	from_canvas_coords,
+	$G, debounce, E, from_canvas_coords,
 	get_file_extension,
 	get_format_from_extension,
 	get_help_folder_icon,
@@ -436,8 +432,7 @@ export {
 	make_css_cursor,
 	memoize_synchronous_function,
 	render_access_key,
-	rgb_to_hsl,
-	to_canvas_coords
+	rgb_to_hsl, TAU, to_canvas_coords
 };
 // Temporary globals until all dependent code is converted to ES Modules
 window.$G = $G; // used by app-localization.js

@@ -9,7 +9,7 @@ import { Handles } from "./Handles.js";
 // import { get_direction, localize } from "./app-localization.js";
 import { default_palette, get_winter_palette } from "./color-data.js";
 import { image_formats } from "./file-format-data.js";
-import { $this_version_news, cancel, change_url_param, clear, confirm_overwrite_capability, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_new, file_open, file_save, file_save_as, get_tool_by_id, get_uris, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, load_image_from_uri, make_or_update_undoable, open_from_file, paste, paste_image_from_file, redo, render_history_as_gif, reset_canvas_and_history, reset_file, reset_selected_colors, resize_canvas_and_save_dimensions, resize_canvas_without_saving_dimensions, save_as_prompt, select_all, select_tool, select_tools, set_magnification, show_document_history, show_error_message, show_news, show_resource_load_error_message, toggle_grid, undo, update_canvas_rect, update_disable_aa, update_helper_layer, update_magnified_canvas_size, view_bitmap, write_image_file } from "./functions.js";
+import { $this_version_news, cancel, change_url_param, clear, confirm_overwrite_capability, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_new, file_save, file_save_as, get_tool_by_id, get_uris, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, load_image_from_uri, make_or_update_undoable, open_from_file, paste, paste_image_from_file, redo, render_history_as_gif, reset_canvas_and_history, reset_file, reset_selected_colors, resize_canvas_and_save_dimensions, resize_canvas_without_saving_dimensions, save_as_prompt, select_all, select_tool, select_tools, set_magnification, show_document_history, show_error_message, show_news, show_resource_load_error_message, toggle_grid, undo, update_canvas_rect, update_disable_aa, update_helper_layer, update_magnified_canvas_size, view_bitmap, write_image_file } from "./functions.js";
 import { show_help } from "./help.js";
 import { $G, E, TAU, get_file_extension, get_help_folder_icon, is_discord_embed, make_canvas, to_canvas_coords } from "./helpers.js";
 import { init_webgl_stuff, rotate } from "./image-manipulation.js";
@@ -39,6 +39,7 @@ window.average_points = average_points;
 
 // #endregion
 
+init_webgl_stuff();
 
 // #region System Hooks and default implementations
 
@@ -424,6 +425,15 @@ const canvas_handles = new Handles({
 });
 window.canvas_handles = canvas_handles;
 
+const $goal = $(goal_canvas).css("left", "810px").appendTo($canvas_area);
+var goal_image = new Image();
+goal_image.onload = function () { goal_ctx.drawImage(this, 0, 0) };
+goal_image.src = "images/archipelago/1.png";
+window.$goal = $goal;
+
+const $diff = $(diff_canvas).css("left", "810px").appendTo($canvas_area);
+window.$diff = $diff;
+
 const $top = $(E("div")).addClass("component-area top").prependTo($V);
 window.$top = $top;
 const $bottom = $(E("div")).addClass("component-area bottom").appendTo($V);
@@ -452,6 +462,8 @@ const $status_position = $(E("div")).addClass("status-coordinates status-field i
 window.$status_position = $status_position;
 const $status_size = $(E("div")).addClass("status-coordinates status-field inset-shallow").appendTo($status_area);
 window.$status_size = $status_size;
+const $status_similarity = $(E("div")).addClass("status-coordinates status-field inset-shallow").appendTo($status_area);
+window.$status_similarity = $status_similarity;
 
 // #region News Indicator
 const news_seen_key = "jspaint latest news seen";
@@ -1053,7 +1065,7 @@ $G.on("keydown", (e) => {
 				}
 				break;
 			case "O":
-				file_open();
+				//file_open();
 				break;
 			case "S":
 				if (e.shiftKey) {
@@ -1070,6 +1082,9 @@ $G.on("keydown", (e) => {
 				break;
 			case "E":
 				image_attributes();
+				break;
+			case "M":
+				$diff.toggle();
 				break;
 
 			// These shortcuts are mostly reserved by browsers,
@@ -1201,6 +1216,7 @@ $G.on("cut copy paste", (e) => {
 			}
 		}
 	} else if (e.type === "paste") {
+		return;
 		for (const item of cd.items) {
 			if (item.type.match(/^text\/(?:x-data-uri|uri-list|plain)|URL$/)) {
 				item.getAsString((text) => {
@@ -1395,6 +1411,10 @@ function canvas_pointer_move(e) {
 	pointer_previous = pointer;
 }
 $canvas.on("pointermove", (e) => {
+	pointer = to_canvas_coords(e);
+	$status_position.text(`${pointer.x},${pointer.y}`);
+});
+$goal.on("pointermove", (e) => {
 	pointer = to_canvas_coords(e);
 	$status_position.text(`${pointer.x},${pointer.y}`);
 });
@@ -1623,6 +1643,42 @@ $canvas.on("pointerdown", (e) => {
 
 	pointerdown_action();
 
+	update_helper_layer(e);
+});
+// #endregion
+
+// #region Goal Canvas Interaction
+$goal.on("pointerdown", (e) => {
+	if (selected_tool.name != "Pick Color") return;
+	button = e.button;
+	ctrl = e.ctrlKey;
+	shift = e.shiftKey;
+	if (e.button === 0) {
+		reverse = false;
+	} else if (e.button === 2) {
+		reverse = true;
+	} else {
+		return;
+	}
+	pointer_start = pointer_previous = pointer = to_canvas_coords(e);
+	selected_tool.paint(goal_ctx, pointer.x, pointer.y);
+	function goal_canvas_pointer_move(e) {
+		pointer = to_canvas_coords(e);
+		selected_tool.paint(goal_ctx, pointer.x, pointer.y);
+	}
+	$G.on("pointermove", goal_canvas_pointer_move);
+	$G.one("pointerup", () => {
+		button = undefined;
+		reverse = false;
+		pointer = to_canvas_coords(e);
+		selected_tool.pointerup(goal_ctx, pointer.x, pointer.y);
+		if (selected_tools.length === 1) {
+			if (selected_tool.deselect) {
+				select_tools(return_to_tools);
+			}
+		}
+		$G.off("pointermove", goal_canvas_pointer_move);
+	});
 	update_helper_layer(e);
 });
 // #endregion

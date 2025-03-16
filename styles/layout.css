@@ -499,6 +499,7 @@ html, body, .jspaint {
 }
 .edit-colors-window .window-content .right-side {
 	width: 218px;
+	height: 298px;
 	position: relative;
 	padding-top: 7px;
 	padding-left: 10px/*rtl:ignore*/;
@@ -624,6 +625,10 @@ html, body, .jspaint {
 	direction: ltr/*rtl:ignore*/;
 }
 .main-canvas {
+	position: absolute;
+	z-index: 2;
+}
+.goal-canvas {
 	position: absolute;
 	z-index: 2;
 }

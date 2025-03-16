@@ -1,9 +1,10 @@
 // @ts-check
 /* global $bottom, $left, $right, button, get_direction, localize, palette, selected_colors */
 import { $Component } from "./$Component.js";
+import { received } from "./archipelago.js";
 // import { get_direction, localize } from "./app-localization.js";
 import { show_edit_colors_window } from "./edit-colors.js";
-import { $G, E, make_canvas } from "./helpers.js";
+import { $G, E, get_rgba_from_color, make_canvas } from "./helpers.js";
 
 /**
  * Used by the Colors Box and by the Edit Colors dialog.
@@ -23,6 +24,32 @@ function $Swatch(color) {
 	return $swatch;
 }
 
+function nearest(value, received) {
+	var x = 128;
+	var a = [0, 255];
+	for (var i = 1; i <= received; i++) {
+		for (var y of a) {
+			if (y + x < 256 && !a.includes(y + x)) a.push(y + x);
+			if (y - x >= 0 && !a.includes(y - x)) a.push(y - x);
+		}
+		x /= 2;
+	}
+	var c = 0;
+	for (var y of a) {
+		if (Math.abs(value - y) < Math.abs(value - c)) c = y;
+	}
+	return c;
+}
+
+function legalizeColor(color) {
+	var items = received();
+	var r = items.filter(x => x == "Progressive Color Depth (Red)").length;
+	var g = items.filter(x => x == "Progressive Color Depth (Green)").length;
+	var b = items.filter(x => x == "Progressive Color Depth (Blue)").length;
+	var rgb = get_rgba_from_color(color);
+	return "rgb(" + nearest(rgb[0], r) + "," + nearest(rgb[1], g) + "," + nearest(rgb[2], b) + ")";
+}
+
 /**
  * @param {JQuery<HTMLDivElement>} $swatch
  * @param {string | CanvasPattern | undefined=} new_color
@@ -38,6 +65,7 @@ function update_$swatch($swatch, new_color) {
 		throw new TypeError(`argument to update_$swatch must be CanvasPattern or string (or undefined); got type ${typeof new_color}`);
 	}
 	new_color = new_color || $swatch.data("swatch");
+	new_color = legalizeColor(new_color);
 	$swatch.data("swatch", new_color);
 	const swatch_canvas = /** @type {PixelCanvas} */ (
 		$swatch.find("canvas")[0]
@@ -119,8 +147,9 @@ function $ColorBox(vertical) {
 		});
 	};
 
-	const build_palette = () => {
+	const build_palette = (palette) => {
 		$palette.empty();
+		if (!palette) palette = window.default_palette;
 
 		palette.forEach(make_color_button);
 
@@ -143,6 +172,7 @@ function $ColorBox(vertical) {
 		// the "last foreground color button" starts out as the first in the palette
 		$c.data("$last_fg_color_button", $palette.find(".color-button:first-child"));
 	};
+	$ColorBox.build_palette = build_palette;
 
 	let $c;
 	if (vertical) {

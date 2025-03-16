@@ -2,17 +2,11 @@
 /* global tool_transparent_mode:writable, palette:writable */
 /* global $canvas_area, $colorbox, $status_area, $toolbox, available_languages, get_iso_language_name, get_language, get_language_emoji, get_language_endonym, localize, magnification, main_canvas, menu_bar, MENU_DIVIDER, redos, selection, set_language, show_grid, show_thumbnail, systemHooks, undos */
 // import { available_languages, get_iso_language_name, get_language, get_language_emoji, get_language_endonym, localize, set_language } from "./app-localization.js";
-import { show_edit_colors_window } from "./edit-colors.js";
-import { palette_formats } from "./file-format-data.js";
-import { are_you_sure, change_url_param, choose_file_to_paste, clear, delete_selection, deselect, edit_copy, edit_cut, edit_paste, file_load_from_url, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, image_stretch_and_skew, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, show_file_format_errors, show_multi_user_setup_dialog, show_news, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
+import { are_you_sure, change_url_param, clear, delete_selection, deselect, edit_copy, edit_cut, file_new, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
 import { show_help } from "./help.js";
-import { $G, get_rgba_from_color, is_discord_embed } from "./helpers.js";
+import { is_discord_embed } from "./helpers.js";
 import { show_imgur_uploader } from "./imgur.js";
-import { manage_storage } from "./manage-storage.js";
 import { showMessageBox } from "./msgbox.js";
-import { simulateRandomGesturesPeriodically, simulatingGestures, stopSimulatingGestures } from "./simulate-random-gestures.js";
-import { speech_recognition_active, speech_recognition_available } from "./speech-recognition.js";
-import { get_theme, set_theme } from "./theme.js";
 
 const looksLikeChrome = !!(window.chrome && (window.chrome.loadTimes || window.chrome.csi));
 // NOTE: Microsoft Edge includes window.chrome.app
@@ -39,7 +33,8 @@ const menus = {
 				"show file picker", "show file chooser", "show file browser", "show finder",
 				"browser for file", "browse for a file", "browse for an image", "browse for an image file",
 			],
-			action: () => { file_open(); },
+			enabled: false,
+			action: () => { /*file_open();*/ },
 			description: localize("Opens an existing document."),
 		},
 		{
@@ -113,7 +108,8 @@ const menus = {
 				"load picture from address",
 				"load picture from web address",
 			],
-			action: () => { file_load_from_url(); },
+			enabled: false,
+			action: () => { /*file_load_from_url();*/ },
 			description: localize("Opens an image from the web."),
 		},
 		{
@@ -141,7 +137,8 @@ const menus = {
 				"show autosaves", "show saves", "show saved documents", "show saved files", "show saved pictures", "show saved images", "show local storage",
 				"autosaves", "autosave", "saved documents", "saved files", "saved pictures", "saved images", "local storage",
 			],
-			action: () => { manage_storage(); },
+			enabled: false,
+			action: () => { /*manage_storage();*/ },
 			description: localize("Manages storage of previously created or opened pictures."),
 		},
 		MENU_DIVIDER,
@@ -335,11 +332,9 @@ const menus = {
 			speech_recognition: [
 				"paste", "paste from clipboard", "paste from the clipboard", "insert clipboard", "insert clipboard contents", "insert the contents of the clipboard", "paste what's on the clipboard",
 			],
-			enabled: () =>
-				// @TODO: disable if nothing in clipboard or wrong type (if we can access that)
-				true,
+			enabled: false,
 			action: () => {
-				edit_paste(true);
+				//edit_paste(true);
 			},
 			description: localize("Inserts the contents of the Clipboard."),
 		},
@@ -383,7 +378,8 @@ const menus = {
 			speech_recognition: [
 				"paste a file", "paste from a file", "insert a file", "insert an image file",
 			],
-			action: () => { choose_file_to_paste(); },
+			enabled: false,
+			action: () => { /*choose_file_to_paste();*/ },
 			description: localize("Pastes a file into the selection."),
 		},
 	],
@@ -431,23 +427,6 @@ const menus = {
 				check: () => $status_area.is(":visible"),
 			},
 			description: localize("Shows or hides the status bar."),
-		},
-		{
-			label: localize("T&ext Toolbar"),
-			speech_recognition: [
-				"toggle text toolbar", "toggle font toolbar", "toggle text tool bar", "toggle font tool bar",
-				"toggle font box", "toggle fonts box", "toggle text options box", "toggle text tool options box", "toggle font options box",
-				"toggle font window", "toggle fonts window", "toggle text options window", "toggle text tool options window", "toggle font options window",
-				// @TODO: hide/show
-			],
-			enabled: false, // @TODO: toggle fonts box
-			checkbox: {
-				toggle: () => {
-					// Kind of silly that I haven't implemented this in the 10 years I've been working on this project.
-				},
-				check: () => false,
-			},
-			description: localize("Shows or hides the text toolbar."),
 		},
 		MENU_DIVIDER,
 		{
@@ -614,22 +593,9 @@ const menus = {
 				"flip",
 				"rotate",
 				"flip/rotate", "flip slash rotate", "flip and rotate", "flip or rotate", "flip rotate",
-				// @TODO: parameters to command
 			],
 			action: () => { image_flip_and_rotate(); },
 			description: localize("Flips or rotates the picture or a selection."),
-		},
-		{
-			label: localize("&Stretch/Skew"),
-			...shortcut(window.is_electron_app ? "Ctrl+W" : "Ctrl+Alt+W"), // Ctrl+W closes the browser tab
-			speech_recognition: [
-				"stretch", "scale", "resize image",
-				"skew",
-				"stretch/skew", "stretch slash skew", "stretch and skew", "stretch or skew", "stretch skew",
-				// @TODO: parameters to command
-			],
-			action: () => { image_stretch_and_skew(); },
-			description: localize("Stretches or skews the picture or a selection."),
 		},
 		{
 			label: localize("&Invert Colors"),
@@ -663,20 +629,10 @@ const menus = {
 			...shortcut((window.is_electron_app || !looksLikeChrome) ? "Ctrl+Shift+N" : ""), // Ctrl+Shift+N opens incognito window in chrome
 			speech_recognition: [
 				"clear image", "clear canvas", "clear picture", "clear page", "clear drawing",
-				// @TODO: erase?
 			],
-			// (mspaint says "Ctrl+Shft+N")
 			action: () => { if (!selection) { clear(); } },
 			enabled: () => !selection,
 			description: localize("Clears the picture."),
-			// action: ()=> {
-			// 	if (selection) {
-			// 		delete_selection();
-			// 	} else {
-			// 		clear();
-			// 	}
-			// },
-			// mspaint says localize("Clears the picture or selection."), but grays out the option when there's a selection
 		},
 		{
 			label: localize("&Draw Opaque"),
@@ -689,17 +645,18 @@ const menus = {
 				// toggle opaque? toggle opacity?
 				// @TODO: hide/show / "draw opaque" / "draw transparent"/translucent?
 			],
+			enabled: false,
 			checkbox: {
-				toggle: () => {
+				/*toggle: () => {
 					tool_transparent_mode = !tool_transparent_mode;
 					$G.trigger("option-changed");
 				},
-				check: () => !tool_transparent_mode,
+				check: () => !tool_transparent_mode,*/
 			},
 			description: localize("Makes the current selection either opaque or transparent."),
 		},
 	],
-	[localize("&Colors")]: [
+	/*[localize("&Colors")]: [
 		{
 			label: `${localize("&Edit Colors")}...`,
 			speech_recognition: [
@@ -765,7 +722,7 @@ const menus = {
 			},
 			description: localize("Saves the current palette of colors to a file."),
 		},
-	],
+	],*/
 	[localize("&Help")]: [
 		{
 			label: localize("&Help Topics"),
@@ -824,147 +781,7 @@ const menus = {
 			action: () => { render_history_as_gif(); },
 			description: localize("Creates an animation from the document history."),
 		},
-		// {
-		// 	label: localize("Render History as &APNG",
-		// 	// shortcut: "Ctrl+Shift+A",
-		// 	action: ()=> { render_history_as_apng(); },
-		// 	description: localize("Creates an animation from the document history."),
-		// },
-		MENU_DIVIDER,
-		// {
-		// 	label: localize("Extra T&ool Box",
-		// 	checkbox: {
-		// 		toggle: ()=> {
-		// 			// this doesn't really work well at all to have two toolboxes
-		// 			// (this was not the original plan either)
-		// 			$toolbox2.toggle();
-		// 		},
-		// 		check: ()=> {
-		// 			return $toolbox2.is(":visible");
-		// 		},
-		// 	},
-		// 	description: localize("Shows or hides an extra tool box."),
-		// },
-		// {
-		// 	label: localize("&Preferences",
-		// 	action: ()=> {
-		// 		// :)
-		// 	},
-		// 	description: localize("Configures JS Paint."),
-		// }
-		{
-			emoji_icon: "🤪",
-			label: localize("&Draw Randomly"),
-			speech_recognition: [
-				"draw randomly", "draw pseudorandomly", "draw wildly", "make random art",
-			],
-			checkbox: {
-				toggle: () => {
-					if (simulatingGestures) {
-						stopSimulatingGestures();
-					} else {
-						simulateRandomGesturesPeriodically();
-					}
-				},
-				check: () => {
-					return simulatingGestures;
-				},
-			},
-			description: localize("Draws randomly with different tools."),
-		},
-		MENU_DIVIDER,
-		{
-			emoji_icon: "👥",
-			label: localize("&Multi-User"),
-			submenu: [
-				{
-					label: localize("&New Session From Document"),
-					speech_recognition: [
-						"new session from document",
-						"session from document",
-						"online session",
-						"enable multi-user",
-						"enable multiplayer",
-						"start multi-user",
-						"start multiplayer",
-						"start collaboration",
-						"start collaborating",
-						"multi-user mode",
-						"multiplayer mode",
-						"collaboration mode",
-						"collaborative mode",
-						"collaborating mode",
-						"online mode",
-						"go online",
-						"share canvas",
-						"play with friends",
-						"draw with friends",
-						"draw together with friends",
-						"draw together",
-						"multiplayer",
-						"multi-user",
-						"collaborate",
-						"collaboration",
-						"collaborative",
-						"collaborating",
-					],
-					action: () => {
-						show_multi_user_setup_dialog(true);
-					},
-					description: localize("Starts a new multi-user session from the current document."),
-				},
-				{
-					label: localize("New &Blank Session"),
-					speech_recognition: [
-						"new blank session",
-						"new empty session",
-						"new fresh session",
-						"new blank multi-user session",
-						"new empty multi-user session",
-						"new fresh multi-user session",
-						"new blank multiplayer session",
-						"new empty multiplayer session",
-						"new fresh multiplayer session",
-						"new multi-user session",
-						"new multiplayer session",
-						"new collaboration session",
-						"new collaborative session",
-						"start multi-user session",
-						"start multiplayer session",
-						"start collaboration session",
-						"start collaborative session",
-						"start multi-user with a new",
-						"start multiplayer with a new",
-						"start collaboration with a new",
-						"start collaborating with a new",
-						"start multi-user with a blank",
-						"start multiplayer with a blank",
-						"start collaboration with a blank",
-						"start collaborating with a blank",
-						"start multi-user with an empty",
-						"start multiplayer with an empty",
-						"start collaboration with an empty",
-						"start collaborating with an empty",
-						"start multi-user with new",
-						"start multiplayer with new",
-						"start collaboration with new",
-						"start collaborating with new",
-						"start multi-user with blank",
-						"start multiplayer with blank",
-						"start collaboration with blank",
-						"start collaborating with blank",
-						"start multi-user with empty",
-						"start multiplayer with empty",
-						"start collaboration with empty",
-						"start collaborating with empty",
-					],
-					action: () => {
-						show_multi_user_setup_dialog(false);
-					},
-					description: localize("Starts a new multi-user session from an empty document."),
-				},
-			],
-		},
+		/*MENU_DIVIDER,
 		{
 			emoji_icon: "💄",
 			label: localize("&Themes"),
@@ -1050,128 +867,6 @@ const menus = {
 					enabled: () => get_theme() != "modern-dark.css",
 					description: localize("Gives JS Paint a more modern look, with dark colors."),
 				},
-				{
-					emoji_icon: "❄️",
-					label: localize("&Winter"),
-					speech_recognition: [
-						"winter theme", "switch to winter theme", "use winter theme", "set theme to winter", "set theme winter", "switch to winter theme", "switch theme to winter", "switch theme winter",
-						"holiday theme", "switch to holiday theme", "use holiday theme", "set theme to holiday", "set theme holiday", "switch to holiday theme", "switch theme to holiday", "switch theme holiday",
-						"christmas theme", "switch to christmas theme", "use christmas theme", "set theme to christmas", "set theme christmas", "switch to christmas theme", "switch theme to christmas", "switch theme christmas",
-						"hanukkah theme", "switch to hanukkah theme", "use hanukkah theme", "set theme to hanukkah", "set theme hanukkah", "switch to hanukkah theme", "switch theme to hanukkah", "switch theme hanukkah",
-					],
-					action: () => {
-						set_theme("winter.css");
-					},
-					enabled: () => get_theme() != "winter.css",
-					description: localize("Makes JS Paint look festive for the holidays."),
-				},
-				{
-					emoji_icon: "🤘",
-					label: localize("&Occult"),
-					speech_recognition: [
-						"occult theme", "switch to occult theme", "use occult theme", "set theme to occult", "set theme occult", "switch to occult theme", "switch theme to occult", "switch theme occult",
-						"occultist theme", "switch to occultist theme", "use occultist theme", "set theme to occultist", "set theme occultist", "switch to occultist theme", "switch theme to occultist", "switch theme occultist",
-						"occultism theme", "switch to occultism theme", "use occultism theme", "set theme to occultism", "set theme occultism", "switch to occultism theme", "switch theme to occultism", "switch theme occultism",
-						"satan theme", "switch to satan theme", "use satan theme", "set theme to satan", "set theme satan", "switch to satan theme", "switch theme to satan", "switch theme satan",
-						"satanic theme", "switch to satanic theme", "use satanic theme", "set theme to satanic", "set theme satanic", "switch to satanic theme", "switch theme to satanic", "switch theme satanic",
-						"satanist theme", "switch to satanist theme", "use satanist theme", "set theme to satanist", "set theme satanist", "switch to satanist theme", "switch theme to satanist", "switch theme satanist",
-						"satanism theme", "switch to satanism theme", "use satanism theme", "set theme to satanism", "set theme satanism", "switch to satanism theme", "switch theme to satanism", "switch theme satanism",
-						"demon theme", "switch to demon theme", "use demon theme", "set theme to demon", "set theme demon", "switch to demon theme", "switch theme to demon", "switch theme demon",
-						"demonic theme", "switch to demonic theme", "use demonic theme", "set theme to demonic", "set theme demonic", "switch to demonic theme", "switch theme to demonic", "switch theme demonic",
-						"daemon theme", "switch to daemon theme", "use daemon theme", "set theme to daemon", "set theme daemon", "switch to daemon theme", "switch theme to daemon", "switch theme daemon",
-						"daemonic theme", "switch to daemonic theme", "use daemonic theme", "set theme to daemonic", "set theme daemonic", "switch to daemonic theme", "switch theme to daemonic", "switch theme daemonic",
-						"devil theme", "switch to devil theme", "use devil theme", "set theme to devil", "set theme devil", "switch to devil theme", "switch theme to devil", "switch theme devil",
-						"devilish theme", "switch to devilish theme", "use devilish theme", "set theme to devilish", "set theme devilish", "switch to devilish theme", "switch theme to devilish", "switch theme devilish",
-						"devil worship theme", "switch to devil worship theme", "use devil worship theme", "set theme to devil worship", "set theme devil worship", "switch to devil worship theme", "switch theme to devil worship", "switch theme devil worship",
-						"witchcraft theme", "switch to witchcraft theme", "use witchcraft theme", "set theme to witchcraft", "set theme witchcraft", "switch to witchcraft theme", "switch theme to witchcraft", "switch theme witchcraft",
-						"witch theme", "switch to witch theme", "use witch theme", "set theme to witch", "set theme witch", "switch to witch theme", "switch theme to witch", "switch theme witch",
-						"witchy theme", "switch to witchy theme", "use witchy theme", "set theme to witchy", "set theme witchy", "switch to witchy theme", "switch theme to witchy", "switch theme witchy",
-						"witchery theme", "switch to witchery theme", "use witchery theme", "set theme to witchery", "set theme witchery", "switch to witchery theme", "switch theme to witchery", "switch theme witchery",
-						"ritual theme", "switch to ritual theme", "use ritual theme", "set theme to ritual", "set theme ritual", "switch to ritual theme", "switch theme to ritual", "switch theme ritual",
-						"ritualism theme", "switch to ritualism theme", "use ritualism theme", "set theme to ritualism", "set theme ritualism", "switch to ritualism theme", "switch theme to ritualism", "switch theme ritualism",
-						"ritualistic theme", "switch to ritualistic theme", "use ritualistic theme", "set theme to ritualistic", "set theme ritualistic", "switch to ritualistic theme", "switch theme to ritualistic", "switch theme ritualistic",
-						"Halloween theme", "switch to Halloween theme", "use Halloween theme", "set theme to Halloween", "set theme Halloween", "switch to Halloween theme", "switch theme to Halloween", "switch theme Halloween",
-
-						"summon demon", "summon daemon", "summon demon theme", "summon daemon theme",
-						"summon demons", "summon daemons", "summon demons theme", "summon daemons theme",
-						"demon summoning", "daemon summoning", "demon summoning theme", "daemon summoning theme",
-						"demons summoning", "daemons summoning", "demons summoning theme", "daemons summoning theme",
-						"welcome demon", "welcome daemon", "welcome demon theme", "welcome daemon theme",
-						"welcome demons", "welcome daemons", "welcome demons theme", "welcome daemons theme",
-						"summon satan", "summon satan theme", "summon daemon theme",
-						"satan summoning", "satan summoning theme", "daemon summoning theme",
-						"welcome satan", "welcome satan theme",
-						"summon devil", "summon the devil", "summon devil theme", "summon the devil theme",
-						"welcome devil", "welcome the devil", "welcome devil theme", "welcome the devil theme",
-
-						"I beseech thee", "I entreat thee", "I summon thee", "I call upon thy name", "I call upon thine name", "Lord Satan", "hail Satan", "hail Lord Satan", "O Mighty Satan", "Oh Mighty Satan",
-						"In nomine Dei nostri Satanas Luciferi Excelsi", "Rege Satanas", "Ave Satanas", "Rege Satana", "Ave Satana",
-						"go demonic", "go daemonic", "go occult", "666",
-						"begin ritual", "begin the ritual", "begin a ritual",
-						"start ritual", "start the ritual", "start a ritual",
-					],
-					action: () => {
-						set_theme("occult.css");
-					},
-					enabled: () => get_theme() != "occult.css",
-					description: localize("Starts the ritual."),
-				},
-				{
-					emoji_icon: "🫧",
-					label: localize("&Bubblegum"),
-					speech_recognition: [
-						"bubblegum theme", "switch to bubblegum theme", "use bubblegum theme", "set theme to bubblegum", "set theme bubblegum", "switch to bubblegum theme", "switch theme to bubblegum", "switch theme bubblegum",
-						"pink theme", "switch to pink theme", "use pink theme", "set theme to pink", "set theme pink", "switch to pink theme", "switch theme to pink", "switch theme pink",
-						"pearlescent theme", "pearlescent bubblegum", "pearlescent pink",
-						"pearly theme", "pearly bubblegum", "pearly pink",
-						"shiny theme", "shiny bubblegum", "shiny pink",
-						"3D theme", "3D bubblegum", "3D pink",
-						"bubbly theme",
-						"corporate bubblegum",
-						"business pink",
-					],
-					action: () => {
-						set_theme("bubblegum.css");
-					},
-					enabled: () => get_theme() != "bubblegum.css",
-					description: localize("Makes JS Paint look like pearlescent bubblegum."),
-				},
-				// {
-				// 	emoji_icon: "🪐",
-				// 	label: localize("&Retro Futurist"),
-				// 	speech_recognition: [
-				// 		"retrofuturist theme", "switch to retrofuturist theme", "use retrofuturist theme", "set theme to retrofuturist", "set theme retrofuturist", "switch to retrofuturist theme", "switch theme to retrofuturist", "switch theme retrofuturist",
-				// 		"retro futurist theme", "switch to retro futurist theme", "use retro futurist theme", "set theme to retro futurist", "set theme retro futurist", "switch to retro futurist theme", "switch theme to retro futurist", "switch theme retro futurist",
-				// 		"retrofuturistic theme", "switch to retrofuturistic theme", "use retrofuturistic theme", "set theme to retrofuturistic", "set theme retrofuturistic", "switch to retrofuturistic theme", "switch theme to retrofuturistic", "switch theme retrofuturistic",
-				// 		"retro futuristic theme", "switch to retro futuristic theme", "use retro futuristic theme", "set theme to retro futuristic", "set theme retro futuristic", "switch to retro futuristic theme", "switch theme to retro futuristic", "switch theme retro futuristic",
-				// 		// spell-checker: disable
-				// 		"scifi theme", "switch to scifi theme", "use scifi theme", "set theme to scifi", "set theme scifi", "switch to scifi theme", "switch theme to scifi", "switch theme scifi",
-				// 		// spell-checker: enable
-				// 		"sci-fi theme", "switch to sci-fi theme", "use sci-fi theme", "set theme to sci-fi", "set theme sci-fi", "switch to sci-fi theme", "switch theme to sci-fi", "switch theme sci-fi",
-				// 	],
-				// 	action: () => {
-				// 		set_theme("retrofuturist.css");
-				// 	},
-				// 	enabled: false,
-				// 	// enabled: () => get_theme() != "retrofuturist.css",
-				// 	description: localize("Makes JS Paint look like the future as imagined in the past."),
-				// },
-				// {
-				// 	emoji_icon: "🧺",
-				// 	label: localize("&Picnic"),
-				// 	speech_recognition: [
-				// 		"picnic theme", "switch to picnic theme", "use picnic theme", "set theme to picnic", "set theme picnic", "switch to picnic theme", "switch theme to picnic", "switch theme picnic",
-				// 		"pic-nic theme", "switch to pic-nic theme", "use pic-nic theme", "set theme to pic-nic", "set theme pic-nic", "switch to pic-nic theme", "switch theme to pic-nic", "switch theme pic-nic",
-				// 		"sandbox theme", "switch to sandbox theme", "use sandbox theme", "set theme to sandbox", "set theme sandbox", "switch to sandbox theme", "switch theme to sandbox", "switch theme sandbox",
-				// 		"wooden theme", "switch to wooden theme", "use wooden theme", "set theme to wooden", "set theme wooden", "switch to wooden theme", "switch theme to wooden", "switch theme wooden",
-				// 	],
-				// 	action: () => {
-				// 		set_theme("picnic.css");
-				// 	},
-				// 	enabled: false,
-				// 	// enabled: () => get_theme() != "picnic.css",
-				// 	description: localize("Makes JS Paint look like a picnic in the park."),
-				// },
 			],
 		},
 		{
@@ -1188,89 +883,7 @@ const menus = {
 					description: localize("Changes the language to %1.", get_iso_language_name(available_language)),
 				}
 			)),
-		},
-		{
-			emoji_icon: "👁️",
-			label: localize("&Eye Gaze Mode"),
-			speech_recognition: [
-				"toggle eye gaze mode",
-				"enable eye gaze mode",
-				"disable eye gaze mode",
-				"enter eye gaze mode",
-				"leave eye gaze mode",
-				"exit eye gaze mode",
-				"turn on eye gaze mode",
-				"turn off eye gaze mode",
-				"eye gaze mode on",
-				"eye gaze mode off",
-				"start eye gaze mode",
-				"stop eye gaze mode",
-
-				"toggle eye gaze",
-				"enable eye gaze",
-				"disable eye gaze",
-				"enter eye gaze",
-				"leave eye gaze",
-				"exit eye gaze",
-				"turn on eye gaze",
-				"turn off eye gaze",
-				"eye gaze on",
-				"eye gaze off",
-				"start eye gaze",
-				"stop eye gaze",
-
-				"toggle eye gazing",
-				"enable eye gazing",
-				"disable eye gazing",
-				"enter eye gazing",
-				"leave eye gazing",
-				"exit eye gazing",
-				"turn on eye gazing",
-				"turn off eye gazing",
-				"eye gazing on",
-				"eye gazing off",
-				"start eye gazing",
-				"stop eye gazing",
-			],
-			checkbox: {
-				toggle: () => {
-					if (/eye-gaze-mode/i.test(location.hash)) {
-						// @TODO: confirmation dialog that you could cancel with dwell clicking!
-						// if (confirm("This will disable eye gaze mode.")) {
-						change_url_param("eye-gaze-mode", false);
-						// }
-					} else {
-						change_url_param("eye-gaze-mode", true);
-					}
-				},
-				check: () => {
-					return /eye-gaze-mode/i.test(location.hash);
-				},
-			},
-			description: localize("Enlarges buttons and provides dwell clicking."),
-		},
-		{
-			emoji_icon: "🎙️",
-			label: localize("&Speech Recognition"),
-			speech_recognition: [
-				"toggle speech recognition", "toggle speech recognition mode",
-				"disable speech recognition", "disable speech recognition mode", "turn off speech recognition", "turn off speech recognition mode", "leave speech recognition mode", "exit speech recognition mode",
-			],
-			checkbox: {
-				toggle: () => {
-					if (/speech-recognition-mode/i.test(location.hash)) {
-						change_url_param("speech-recognition-mode", false);
-					} else {
-						change_url_param("speech-recognition-mode", true);
-					}
-				},
-				check: () => {
-					return speech_recognition_active;
-				},
-			},
-			enabled: () => speech_recognition_available,
-			description: localize("Controls the application with voice commands."),
-		},
+		},*/
 		{
 			emoji_icon: "↕️",
 			label: localize("&Vertical Color Box"),
@@ -1308,30 +921,24 @@ const menus = {
 			},
 			description: localize("Arranges the color box vertically."),
 		},
-		MENU_DIVIDER,
 		{
-			emoji_icon: "🗃️",
-			label: localize("Manage Storage"),
-			speech_recognition: [
-				// This is a duplicate menu item (for easy access), so it doesn't need speech recognition data here.
-			],
-			action: () => { manage_storage(); },
-			description: localize("Manages storage of previously created or opened pictures."),
+			label: localize("&Difference Mode"),
+			...shortcut("Ctrl+M"),
+			speech_recognition: [],
+			checkbox: {
+				toggle: () => {
+					$diff.toggle();
+				},
+				check: () => {
+					return $diff.is(":visible");
+				},
+			},
+			enabled: () => {
+				return true;
+			},
+			description: localize("Changes the goal image to show the difference from the current canvas."),
 		},
 		MENU_DIVIDER,
-		{
-			emoji_icon: "📢",
-			label: localize("Project News"),
-			speech_recognition: [
-				"project news", "news about the project", "news about this project",
-				"app news", "news about the app", "news about this app",
-				"application news", "news about the application", "news about this application",
-				"what's new", "new features",
-				"show news", "show news update", "news update",
-			],
-			action: () => { show_news(); },
-			description: localize("Shows news about JS Paint."),
-		},
 		{
 			emoji_icon: "👾", // "👋",
 			label: localize("Discord"),
@@ -1349,17 +956,8 @@ const menus = {
 			speech_recognition: [
 				"repo on github", "project on github", "show the source code", "show source code",
 			],
-			action: () => { window.open("https://github.com/1j01/jspaint"); },
+			action: () => { window.open("https://github.com/mariomantaw/jspaint"); },
 			description: localize("Shows the project on GitHub."),
-		},
-		{
-			emoji_icon: "💵",
-			label: localize("Donate"),
-			speech_recognition: [
-				"donate", "make a monetary contribution",
-			],
-			action: () => { window.open("https://www.paypal.me/IsaiahOdhner"); },
-			description: localize("Supports the project."),
 		},
 	],
 };

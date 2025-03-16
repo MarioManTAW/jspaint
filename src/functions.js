@@ -7,6 +7,7 @@ import { $DialogWindow } from "./$ToolWindow.js";
 import { OnCanvasHelperLayer } from "./OnCanvasHelperLayer.js";
 import { OnCanvasSelection } from "./OnCanvasSelection.js";
 import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
+import { received, send, slotData } from "./archipelago.js";
 // import { localize } from "./app-localization.js";
 import { default_palette } from "./color-data.js";
 import { image_formats } from "./file-format-data.js";
@@ -141,6 +142,9 @@ function set_all_url_params(params, { replace_history_state = false } = {}) {
 function update_magnified_canvas_size() {
 	$canvas.css("width", main_canvas.width * magnification);
 	$canvas.css("height", main_canvas.height * magnification);
+	$goal.css("width", goal_canvas.width * magnification);
+	$goal.css("height", goal_canvas.height * magnification);
+	$goal.css("left", goal_canvas.width * magnification + 10);
 
 	update_canvas_rect();
 }
@@ -2089,6 +2093,49 @@ function go_to_history_node(target_history_node, canceling) {
 	$G.triggerHandler("history-update"); // update history view
 }
 
+function calculate_similarity() {
+	var s = 0;
+	var main_pixels = main_canvas.ctx.getImageData(0, 0, main_canvas.width, main_canvas.height);
+	var goal_pixels = goal_canvas.ctx.getImageData(0, 0, 800, 600);
+	var diff_pixels = goal_pixels;
+	for (var x = 0; x < 800; x++) {
+		for (var y = 0; y < 600; y++) {
+			if (x < main_canvas.width && y < main_canvas.height) {
+				var main_offset = (x + y * main_canvas.width) * 4;
+				var goal_offset = (x + y * 800) * 4;
+				s += 1 - (Math.abs(main_pixels.data[main_offset] - goal_pixels.data[goal_offset]) +
+					Math.abs(main_pixels.data[main_offset + 1] - goal_pixels.data[goal_offset + 1]) +
+					Math.abs(main_pixels.data[main_offset + 2] - goal_pixels.data[goal_offset + 2])) / 765;
+				diff_pixels.data[goal_offset] = 128 + goal_pixels.data[goal_offset] - main_pixels.data[main_offset];
+				diff_pixels.data[goal_offset + 1] = 128 + goal_pixels.data[goal_offset + 1] - main_pixels.data[main_offset + 1];
+				diff_pixels.data[goal_offset + 2] = 128 + goal_pixels.data[goal_offset + 2] - main_pixels.data[main_offset + 2];
+			}
+		}
+	}
+	diff_ctx.putImageData(diff_pixels, 0, 0);
+	return s / 4800;
+}
+
+function calculate_logic_similarity() {
+	var items = received();
+	var r = items.filter(x => x == "Progressive Color Depth (Red)").length;
+	var g = items.filter(x => x == "Progressive Color Depth (Green)").length;
+	var b = items.filter(x => x == "Progressive Color Depth (Blue)").length;
+	var w = items.filter(x => x == "Progressive Canvas Width").length;
+	var h = items.filter(x => x == "Progressive Canvas Height").length;
+	var p = items.includes("Pick Color");
+	if (!p) {
+		r = Math.min(r, 2);
+		g = Math.min(g, 2);
+		b = Math.min(b, 2);
+	}
+	Array.from({ length: r + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b);
+	return Math.floor(((Array.from({ length: r + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b) +
+		Array.from({ length: g + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b) +
+		Array.from({ length: b + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b)) *
+		(4 + w) * (3 + h) * slotData.logic_percent + 1) / 36720);
+}
+
 // Note: This function is part of the API.
 /**
  * Creates an undo point.
@@ -2145,6 +2192,9 @@ function undoable({ name, icon, use_loose_canvas_changes, soft, assume_saved }, 
 	});
 	current_history_node.futures.push(new_history_node);
 	current_history_node = new_history_node;
+	var similarity = calculate_similarity();
+	$status_similarity.text(similarity.toFixed(5) + "%/" + calculate_logic_similarity() + "%");
+	send(similarity);
 
 	$G.triggerHandler("history-update"); // update history view
 
@@ -3097,37 +3147,37 @@ function resize_canvas_without_saving_dimensions(unclamped_width, unclamped_heig
 	const new_width = Math.max(1, unclamped_width);
 	const new_height = Math.max(1, unclamped_height);
 	if (main_canvas.width !== new_width || main_canvas.height !== new_height) {
-		undoable({
+		/*undoable({
 			name: undoable_meta.name || "Resize Canvas",
 			icon: undoable_meta.icon || get_help_folder_icon("p_stretch_both.png"),
-		}, () => {
-			try {
-				const image_data = main_ctx.getImageData(0, 0, new_width, new_height);
-				main_canvas.width = new_width;
-				main_canvas.height = new_height;
-				main_ctx.disable_image_smoothing();
+		}, () => {*/
+		try {
+			const image_data = main_ctx.getImageData(0, 0, new_width, new_height);
+			main_canvas.width = new_width;
+			main_canvas.height = new_height;
+			main_ctx.disable_image_smoothing();
 
-				if (!transparency) {
-					main_ctx.fillStyle = selected_colors.background;
-					main_ctx.fillRect(0, 0, main_canvas.width, main_canvas.height);
-				}
-
-				const temp_canvas = make_canvas(image_data);
-				main_ctx.drawImage(temp_canvas, 0, 0);
-			} catch (exception) {
-				if (exception.name === "NS_ERROR_FAILURE") {
-					// or localize("There is not enough memory or resources to complete operation.")
-					show_error_message(localize("Insufficient memory to perform operation."), exception);
-				} else {
-					show_error_message(localize("An unknown error has occurred."), exception);
-				}
-				// @TODO: undo and clean up undoable
-				// maybe even keep Attributes dialog open if that's what's triggering the resize
-				return;
+			if (!transparency) {
+				main_ctx.fillStyle = selected_colors.background;
+				main_ctx.fillRect(0, 0, main_canvas.width, main_canvas.height);
 			}
 
-			$canvas_area.trigger("resize");
-		});
+			const temp_canvas = make_canvas(image_data);
+			main_ctx.drawImage(temp_canvas, 0, 0);
+		} catch (exception) {
+			if (exception.name === "NS_ERROR_FAILURE") {
+				// or localize("There is not enough memory or resources to complete operation.")
+				show_error_message(localize("Insufficient memory to perform operation."), exception);
+			} else {
+				show_error_message(localize("An unknown error has occurred."), exception);
+			}
+			// @TODO: undo and clean up undoable
+			// maybe even keep Attributes dialog open if that's what's triggering the resize
+			return;
+		}
+
+		$canvas_area.trigger("resize");
+		//});
 	}
 }
 
@@ -3183,8 +3233,8 @@ function image_attributes() {
 
 	const $width_label = $(E("label")).appendTo($main).html(render_access_key(localize("&Width:")));
 	const $height_label = $(E("label")).appendTo($main).html(render_access_key(localize("&Height:")));
-	const $width = $(E("input")).attr({ type: "number", min: 1, "aria-keyshortcuts": "Alt+W W W" }).addClass("no-spinner inset-deep").appendTo($width_label);
-	const $height = $(E("input")).attr({ type: "number", min: 1, "aria-keyshortcuts": "Alt+H H H" }).addClass("no-spinner inset-deep").appendTo($height_label);
+	const $width = $(E("input")).attr({ type: "number", min: 1, disabled: "disabled" }).addClass("no-spinner inset-deep").appendTo($width_label);
+	const $height = $(E("input")).attr({ type: "number", min: 1, disabled: "disabled" }).addClass("no-spinner inset-deep").appendTo($height_label);
 
 	$main.find("input")
 		.css({ width: "40px" })
@@ -3198,9 +3248,9 @@ function image_attributes() {
 	const $units = $(E("fieldset")).appendTo($main).append(`
 		<legend>${localize("Units")}</legend>
 		<div class="fieldset-body">
-			<div class="radio-field"><input type="radio" name="units" id="unit-in" value="in" aria-keyshortcuts="Alt+I I"><label for="unit-in">${render_access_key(localize("&Inches"))}</label></div>
-			<div class="radio-field"><input type="radio" name="units" id="unit-cm" value="cm" aria-keyshortcuts="Alt+M M"><label for="unit-cm">${render_access_key(localize("C&m"))}</label></div>
-			<div class="radio-field"><input type="radio" name="units" id="unit-px" value="px" aria-keyshortcuts="Alt+P P"><label for="unit-px">${render_access_key(localize("&Pixels"))}</label></div>
+			<div class="radio-field"><input type="radio" name="units" id="unit-in" value="in" disabled><label for="unit-in">${render_access_key(localize("&Inches"))}</label></div>
+			<div class="radio-field"><input type="radio" name="units" id="unit-cm" value="cm" disabled><label for="unit-cm">${render_access_key(localize("C&m"))}</label></div>
+			<div class="radio-field"><input type="radio" name="units" id="unit-px" value="px" disabled><label for="unit-px">${render_access_key(localize("&Pixels"))}</label></div>
 		</div>
 	`);
 	$units.find(`[value=${current_unit}]`).attr({ checked: true });
@@ -3214,8 +3264,8 @@ function image_attributes() {
 	const $colors = $(E("fieldset")).appendTo($main).append(`
 		<legend>${localize("Colors")}</legend>
 		<div class="fieldset-body">
-			<div class="radio-field"><input type="radio" name="colors" id="attribute-monochrome" value="monochrome" aria-keyshortcuts="Alt+B B"><label for="attribute-monochrome">${render_access_key(localize("&Black and white"))}</label></div>
-			<div class="radio-field"><input type="radio" name="colors" id="attribute-polychrome" value="polychrome" aria-keyshortcuts="Alt+L L"><label for="attribute-polychrome">${render_access_key(localize("Co&lors"))}</label></div>
+			<div class="radio-field"><input type="radio" name="colors" id="attribute-monochrome" disabled value="monochrome"><label for="attribute-monochrome">${render_access_key(localize("&Black and white"))}</label></div>
+			<div class="radio-field"><input type="radio" name="colors" id="attribute-polychrome" disabled value="polychrome"><label for="attribute-polychrome">${render_access_key(localize("Co&lors"))}</label></div>
 		</div>
 	`);
 	$colors.find(`[value=${monochrome ? "monochrome" : "polychrome"}]`).attr({ checked: true });
@@ -3223,8 +3273,8 @@ function image_attributes() {
 	const $transparency = $(E("fieldset")).appendTo($main).append(`
 		<legend>${localize("Transparency")}</legend>
 		<div class="fieldset-body">
-			<div class="radio-field"><input type="radio" name="transparency" id="attribute-transparent" value="transparent"><label for="attribute-transparent">${localize("Transparent")}</label></div>
-			<div class="radio-field"><input type="radio" name="transparency" id="attribute-opaque" value="opaque"><label for="attribute-opaque">${localize("Opaque")}</label></div>
+			<div class="radio-field"><input type="radio" name="transparency" id="attribute-transparent" disabled value="transparent"><label for="attribute-transparent">${localize("Transparent")}</label></div>
+			<div class="radio-field"><input type="radio" name="transparency" id="attribute-opaque" disabled value="opaque"><label for="attribute-opaque">${localize("Opaque")}</label></div>
 		</div>
 	`);
 	$transparency.find(`[value=${transparency ? "transparent" : "opaque"}]`).attr({ checked: true });
@@ -3407,9 +3457,9 @@ function image_flip_and_rotate() {
 	const $rotate_by_angle = $(E("div")).appendTo($fieldset);
 	$rotate_by_angle.addClass("sub-options");
 	for (const label_with_hotkey of [
-		"&90°",
+		//"&90°",
 		"&180°",
-		"&270°",
+		//"&270°",
 	]) {
 		const degrees = parseInt(AccessKeys.toText(label_with_hotkey), 10);
 		$rotate_by_angle.append(`
@@ -3426,7 +3476,7 @@ function image_flip_and_rotate() {
 			</div>
 		`);
 	}
-	$rotate_by_angle.append(`
+	/*$rotate_by_angle.append(`
 		<div class="radio-wrapper">
 			<input
 				type="radio"
@@ -3444,8 +3494,8 @@ function image_flip_and_rotate() {
 			/>
 			<label for="custom-degrees">${localize("Degrees")}</label>
 		</div>
-	`);
-	$rotate_by_angle.find("#rotate-90").attr({ checked: true });
+	`);*/
+	$rotate_by_angle.find("#rotate-180").attr({ checked: true });
 	// Disabling inputs makes them not even receive mouse events,
 	// and so pointer-events: none is needed to respond to events on the parent.
 	$rotate_by_angle.find("input").attr({ disabled: true });

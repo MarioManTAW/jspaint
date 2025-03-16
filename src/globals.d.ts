@@ -257,10 +257,13 @@ declare const $top: JQuery<HTMLDivElement>;
 declare const $bottom: JQuery<HTMLDivElement>;
 declare const $canvas_area: JQuery<HTMLDivElement>;
 declare const $canvas: JQuery<HTMLCanvasElement>;
+declare const $goal: JQuery<HTMLCanvasElement>;
+declare const $diff: JQuery<HTMLCanvasElement>;
 declare const $colorbox: JQuery<HTMLDivElement> & I$Component & I$ColorBox;
 declare const $status_area: JQuery<HTMLDivElement>;
 declare const $status_position: JQuery<HTMLDivElement>;
 declare const $status_size: JQuery<HTMLDivElement>;
+declare const $status_similarity: JQuery<HTMLDivElement>;
 declare const $status_text: JQuery<HTMLDivElement> & { default: () => void };
 declare const $toolbox: JQuery<HTMLDivElement> & I$Component & I$ToolBox;
 declare const canvas_handles: Handles;
@@ -368,6 +371,7 @@ interface Window {
 	open_from_file(file: File, source_file_handle: UserFileHandle): void;
 	// tools.js
 	TOOL_PENCIL: "TOOL_PENCIL";
+	TOOL_BRUSH: "TOOL_BRUSH";
 	// app.js
 	canvas_bounding_client_rect: DOMRect;
 	_open_images_serially: boolean; // for testing
@@ -378,10 +382,13 @@ interface Window {
 	$bottom: JQuery<HTMLDivElement>;
 	$canvas_area: JQuery<HTMLDivElement>;
 	$canvas: JQuery<HTMLCanvasElement>;
+	$goal: JQuery<HTMLCanvasElement>;
+	$diff: JQuery<HTMLCanvasElement>;
 	$colorbox: JQuery<HTMLDivElement> & I$Component & I$ColorBox;
 	$status_area: JQuery<HTMLDivElement>;
 	$status_position: JQuery<HTMLDivElement>;
 	$status_size: JQuery<HTMLDivElement>;
+	$status_similarity: JQuery<HTMLDivElement>;
 	$status_text: JQuery<HTMLDivElement> & { default: () => void };
 	$toolbox: JQuery<HTMLDivElement> & I$Component & I$ToolBox;
 	canvas_handles: Handles;

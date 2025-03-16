@@ -4,34 +4,7 @@ import { make_stripe_pattern } from "./functions.js";
 
 const default_palette = [
 	"rgb(0,0,0)", // Black
-	"rgb(128,128,128)", // Dark Gray
-	"rgb(128,0,0)", // Dark Red
-	"rgb(128,128,0)", // Pea Green
-	"rgb(0,128,0)", // Dark Green
-	"rgb(0,128,128)", // Slate
-	"rgb(0,0,128)", // Dark Blue
-	"rgb(128,0,128)", // Lavender
-	"rgb(128,128,64)", //
-	"rgb(0,64,64)", //
-	"rgb(0,128,255)", //
-	"rgb(0,64,128)", //
-	"rgb(64,0,255)", //
-	"rgb(128,64,0)", //
-
 	"rgb(255,255,255)", // White
-	"rgb(192,192,192)", // Light Gray
-	"rgb(255,0,0)", // Bright Red
-	"rgb(255,255,0)", // Yellow
-	"rgb(0,255,0)", // Bright Green
-	"rgb(0,255,255)", // Cyan
-	"rgb(0,0,255)", // Bright Blue
-	"rgb(255,0,255)", // Magenta
-	"rgb(255,255,128)", //
-	"rgb(0,255,128)", //
-	"rgb(128,255,255)", //
-	"rgb(128,128,255)", //
-	"rgb(255,0,128)", //
-	"rgb(255,128,64)", //
 ];
 const monochrome_palette_as_colors = [
 	"rgb(0,0,0)",
@@ -77,12 +50,12 @@ const monochrome_palette_as_colors = [
 // ];
 // Grabbed with Color Cop from the screen with Windows 98 SE running in VMWare
 const basic_colors = [
-	"#FF8080", "#FFFF80", "#80FF80", "#00FF80", "#80FFFF", "#0080FF", "#FF80C0", "#FF80FF",
+	/*"#FF8080", "#FFFF80", "#80FF80", "#00FF80", "#80FFFF", "#0080FF", "#FF80C0", "#FF80FF",
 	"#FF0000", "#FFFF00", "#80FF00", "#00FF40", "#00FFFF", "#0080C0", "#8080C0", "#FF00FF",
 	"#804040", "#FF8040", "#00FF00", "#008080", "#004080", "#8080FF", "#800040", "#FF0080",
 	"#800000", "#FF8000", "#008000", "#008040", "#0000FF", "#0000A0", "#800080", "#8000FF",
 	"#400000", "#804000", "#004000", "#004040", "#000080", "#000040", "#400040", "#400080",
-	"#000000", "#808000", "#808040", "#808080", "#408080", "#C0C0C0", "#400040", "#FFFFFF",
+	"#000000", "#808000", "#808040", "#808080", "#408080", "#C0C0C0", "#400040", "#FFFFFF",*/
 ];
 // Note: this array gets modified even though the reference to it is constant.
 const custom_colors = [
