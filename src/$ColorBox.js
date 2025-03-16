@@ -43,9 +43,9 @@ function nearest(value, received) {
 
 function legalizeColor(color) {
 	var items = received();
-	var r = items.filter(x => x == "Progressive Color Depth (Red)").length;
-	var g = items.filter(x => x == "Progressive Color Depth (Green)").length;
-	var b = items.filter(x => x == "Progressive Color Depth (Blue)").length;
+	var r = Math.min(items.filter(x => x == "Progressive Color Depth (Red)").length, 7);
+	var g = Math.min(items.filter(x => x == "Progressive Color Depth (Green)").length, 7);
+	var b = Math.min(items.filter(x => x == "Progressive Color Depth (Blue)").length, 7);
 	var rgb = get_rgba_from_color(color);
 	return "rgb(" + nearest(rgb[0], r) + "," + nearest(rgb[1], g) + "," + nearest(rgb[2], b) + ")";
 }
