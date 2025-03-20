@@ -15,7 +15,7 @@
 	 * @returns {string} - Text in the current language
 	 */
 	function localize(english_text, ...interpolations) {
-		function find_localization(english_text) {
+		/*function find_localization(english_text) {
 			if (AccessKeys.has(english_text)) {
 				const without_hotkey = AccessKeys.remove(english_text);
 				if (localizations[without_hotkey]) {
@@ -43,7 +43,8 @@
 			}
 			return text;
 		}
-		return interpolate(find_localization(english_text), interpolations);
+		return interpolate(find_localization(english_text), interpolations);*/
+		return english_text;
 	}
 
 	const language_storage_key = "jspaint language";
