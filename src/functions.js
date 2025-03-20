@@ -2104,9 +2104,9 @@ function calculate_similarity() {
 			if (x < main_canvas.width && y < main_canvas.height) {
 				var main_offset = (x + y * main_canvas.width) * 4;
 				var goal_offset = (x + y * 800) * 4;
-				s += 1 - (Math.abs(main_pixels.data[main_offset] - goal_pixels.data[goal_offset]) +
-					Math.abs(main_pixels.data[main_offset + 1] - goal_pixels.data[goal_offset + 1]) +
-					Math.abs(main_pixels.data[main_offset + 2] - goal_pixels.data[goal_offset + 2])) / 765;
+				s += 1 - Math.sqrt(((main_pixels.data[main_offset] - goal_pixels.data[goal_offset]) ** 2 +
+					(main_pixels.data[main_offset + 1] - goal_pixels.data[goal_offset + 1]) ** 2 +
+					(main_pixels.data[main_offset + 2] - goal_pixels.data[goal_offset + 2]) ** 2) / 3) / 255;
 				diff_pixels.data[goal_offset] = 128 + goal_pixels.data[goal_offset] - main_pixels.data[main_offset];
 				diff_pixels.data[goal_offset + 1] = 128 + goal_pixels.data[goal_offset + 1] - main_pixels.data[main_offset + 1];
 				diff_pixels.data[goal_offset + 2] = 128 + goal_pixels.data[goal_offset + 2] - main_pixels.data[main_offset + 2];
