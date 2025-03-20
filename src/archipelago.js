@@ -114,7 +114,7 @@ function update() {
 		}
 	}
 	resize_canvas_without_saving_dimensions(w, h);
-	$ColorBox.build_palette(palette);
+	$ColorBox.rebuild_palette(palette);
 }
 
 function deathlink(method) {

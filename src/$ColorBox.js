@@ -172,7 +172,6 @@ function $ColorBox(vertical) {
 		// the "last foreground color button" starts out as the first in the palette
 		$c.data("$last_fg_color_button", $palette.find(".color-button:first-child"));
 	};
-	$ColorBox.build_palette = build_palette;
 
 	let $c;
 	if (vertical) {
