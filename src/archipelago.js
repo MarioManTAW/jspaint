@@ -22,13 +22,12 @@ $("<button>Connect!</button>").on("click", function () {
 			$goal_image.src = "images/archipelago/" + slotData.goal_image + ".png";
 			update();
 			if (slotData.death_link) {
-				console.log("Linked");
 				client.deathLink.enableDeathLink();
 				client.deathLink.on("deathReceived", function () {
 					reset_canvas_and_history();
 					update();
 				})
-			} else console.log("unlinked");
+			}
 			client.messages.on("message", function (message) {
 				$("#text-log").append("<br>" + message);
 			})
