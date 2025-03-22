@@ -1089,6 +1089,7 @@ function file_new() {
 	reset_file();
 	reset_selected_colors();
 	reset_canvas_and_history(); // (with newly reset colors)
+	deathlink("clear");
 	set_magnification(default_magnification);
 }
 
