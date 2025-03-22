@@ -151,5 +151,18 @@ function show_text_client() {
 	});
 }
 
-export { deathlink, received, send, show_text_client, slotData };
+function version_below(version) {
+	if (!slotData.version) return true;
+	var t = version.split(".");
+	var v = slotData.version.split(".");
+	if (parseInt(v[0]) > parseInt(t[0])) return false;
+	if (parseInt(v[0]) < parseInt(t[0])) return true;
+	if (parseInt(v[1]) > parseInt(t[1])) return false;
+	if (parseInt(v[1]) < parseInt(t[1])) return true;
+	if (parseInt(v[2]) > parseInt(t[2])) return false;
+	if (parseInt(v[2]) < parseInt(t[2])) return true;
+	return false;
+}
+
+export { deathlink, received, send, show_text_client, slotData, version_below };
 
