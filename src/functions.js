@@ -7,7 +7,7 @@ import { $DialogWindow } from "./$ToolWindow.js";
 import { OnCanvasHelperLayer } from "./OnCanvasHelperLayer.js";
 import { OnCanvasSelection } from "./OnCanvasSelection.js";
 import { OnCanvasTextBox } from "./OnCanvasTextBox.js";
-import { deathlink, received, send, slotData } from "./archipelago.js";
+import { deathlink, received, send, slotData, version_below } from "./archipelago.js";
 // import { localize } from "./app-localization.js";
 import { default_palette } from "./color-data.js";
 import { image_formats } from "./file-format-data.js";
@@ -2104,9 +2104,16 @@ function calculate_similarity() {
 			if (x < main_canvas.width && y < main_canvas.height) {
 				var main_offset = (x + y * main_canvas.width) * 4;
 				var goal_offset = (x + y * 800) * 4;
-				s += 1 - Math.sqrt(((main_pixels.data[main_offset] - goal_pixels.data[goal_offset]) ** 2 +
-					(main_pixels.data[main_offset + 1] - goal_pixels.data[goal_offset + 1]) ** 2 +
-					(main_pixels.data[main_offset + 2] - goal_pixels.data[goal_offset + 2]) ** 2) / 3) / 255;
+				if (version_below("0.2.0")) {
+					s += 1 - ((main_pixels.data[main_offset] - goal_pixels.data[goal_offset]) +
+						(main_pixels.data[main_offset + 1] - goal_pixels.data[goal_offset + 1]) +
+						(main_pixels.data[main_offset + 2] - goal_pixels.data[goal_offset + 2])) / 765;
+				}
+				else {
+					s += 1 - Math.sqrt(((main_pixels.data[main_offset] - goal_pixels.data[goal_offset]) ** 2 +
+						(main_pixels.data[main_offset + 1] - goal_pixels.data[goal_offset + 1]) ** 2 +
+						(main_pixels.data[main_offset + 2] - goal_pixels.data[goal_offset + 2]) ** 2) / 3) / 255;
+				}
 				diff_pixels.data[goal_offset] = 128 + goal_pixels.data[goal_offset] - main_pixels.data[main_offset];
 				diff_pixels.data[goal_offset + 1] = 128 + goal_pixels.data[goal_offset + 1] - main_pixels.data[main_offset + 1];
 				diff_pixels.data[goal_offset + 2] = 128 + goal_pixels.data[goal_offset + 2] - main_pixels.data[main_offset + 2];
@@ -2130,10 +2137,12 @@ function calculate_logic_similarity() {
 		g = Math.min(g, 2);
 		b = Math.min(b, 2);
 	}
-	return Math.floor(((Array.from({ length: r + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b) +
-		Array.from({ length: g + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b) +
-		Array.from({ length: b + 1 }, (x, i) => 2 ** (7 - i)).reduce((a, b) => a + b)) *
-		(4 + w) * (3 + h) * slotData.logic_percent + 1) / 36720);
+	if (version_below("0.2.0")) {
+		return (((768 - 2 ** (7 - r) - 2 ** (7 - g) - 2 ** (7 - b)) * (4 + w) * (3 + h) * slotData.logic_percent) / 36720);
+	}
+	else {
+		return ((765 - Math.sqrt(((2 ** (7 - r) - 1) ** 2 + (2 ** (7 - g) - 1) ** 2 + (2 ** (7 - b) - 1) ** 2) * 3)) * (4 + w) * (3 + h) * slotData.logic_percent / 36720);
+	}
 }
 
 // Note: This function is part of the API.
@@ -2193,7 +2202,7 @@ function undoable({ name, icon, use_loose_canvas_changes, soft, assume_saved }, 
 	current_history_node.futures.push(new_history_node);
 	current_history_node = new_history_node;
 	var similarity = calculate_similarity();
-	$status_similarity.text(similarity.toFixed(5) + "%/" + calculate_logic_similarity() + "%");
+	$status_similarity.text(similarity.toFixed(3) + "%/" + calculate_logic_similarity().toFixed(3) + "%");
 	send(similarity);
 
 	$G.triggerHandler("history-update"); // update history view
