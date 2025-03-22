@@ -1,5 +1,5 @@
 import { Client } from "../lib/archipelago.min.js";
-import { clear, image_invert_colors, reset_canvas_and_history, resize_canvas_without_saving_dimensions, undo } from "./functions.js";
+import { clear, image_invert_colors, reset_canvas_and_history, resize_canvas_without_saving_dimensions, select_tool, undo } from "./functions.js";
 import { flip_horizontal, flip_vertical } from "./image-manipulation.js";
 
 // Create a new instance of the Client class.
@@ -21,6 +21,7 @@ $("<button>Connect!</button>").on("click", function () {
 			slotData = e;
 			$goal_image.src = "images/archipelago/" + slotData.goal_image + ".png";
 			update();
+			select_tool(default_tool);
 			if (slotData.death_link) {
 				client.deathLink.enableDeathLink();
 				client.deathLink.on("deathReceived", function () {
@@ -71,7 +72,11 @@ function send(similarity) {
 
 function received() {
 	var items = [];
-	for (var x of client.items.received) items.push(x.name);
+	for (var item of client.items.received) items.push(item.name);
+	if (version_below("0.2.0")) {
+		items.push("Magnifier");
+		items.push("Brush");
+	}
 	return items;
 }
 
@@ -79,20 +84,21 @@ function update() {
 	var c = 2;
 	var w = 400;
 	var h = 300;
-	for (var x of client.items.received) {
-		switch (x.name) {
+	for (var item of received()) {
+		switch (item) {
 			case "Additional Palette Color":
 				c++;
 				if (c > palette.length) palette.push("#FFFFFF");
 				break;
+			case "Pencil":
+			case "Brush":
+				default_tool = get_tool_by_id("TOOL_" + item.toUpperCase());
 			case "Free-Form Select":
 			case "Select":
 			case "Eraser/Color Eraser":
 			case "Fill With Color":
 			case "Pick Color":
 			case "Magnifier":
-			case "Pencil":
-			case "Brush":
 			case "Airbrush":
 			case "Text":
 			case "Line":
@@ -101,7 +107,7 @@ function update() {
 			case "Polygon":
 			case "Ellipse":
 			case "Rounded Rectangle":
-				$('[title="' + x.name + '"]').removeClass("disabled");
+				$('[title="' + item + '"]').removeClass("disabled");
 				break;
 			case "Progressive Canvas Width":
 				if (w < 800) w += 100;
