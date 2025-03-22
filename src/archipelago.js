@@ -1,5 +1,4 @@
 import { Client } from "../lib/archipelago.min.js";
-import { $ColorBox } from "./$ColorBox.js";
 import { clear, image_invert_colors, reset_canvas_and_history, resize_canvas_without_saving_dimensions, undo } from "./functions.js";
 import { flip_horizontal, flip_vertical } from "./image-manipulation.js";
 
@@ -114,7 +113,7 @@ function update() {
 		}
 	}
 	resize_canvas_without_saving_dimensions(w, h);
-	$ColorBox.rebuild_palette(palette);
+	$colorbox.rebuild_palette(palette);
 }
 
 function deathlink(method) {
