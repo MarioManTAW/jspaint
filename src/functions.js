@@ -2566,6 +2566,7 @@ function delete_selection(meta = {}) {
 	}
 }
 function select_all() {
+	if (!received().includes("Select")) return;
 	deselect();
 	select_tool(get_tool_by_id(TOOL_SELECT));
 

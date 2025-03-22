@@ -2,7 +2,7 @@
 /* global tool_transparent_mode:writable, palette:writable */
 /* global $canvas_area, $colorbox, $status_area, $toolbox, available_languages, get_iso_language_name, get_language, get_language_emoji, get_language_endonym, localize, magnification, main_canvas, menu_bar, MENU_DIVIDER, redos, selection, set_language, show_grid, show_thumbnail, systemHooks, undos */
 // import { available_languages, get_iso_language_name, get_language, get_language_emoji, get_language_endonym, localize, set_language } from "./app-localization.js";
-import { show_text_client } from "./archipelago.js";
+import { received, show_text_client } from "./archipelago.js";
 import { are_you_sure, change_url_param, clear, delete_selection, deselect, edit_copy, edit_cut, file_new, file_open, file_print, file_save, file_save_as, image_attributes, image_flip_and_rotate, image_invert_colors, redo, render_history_as_gif, sanity_check_blob, save_selection_to_file, select_all, set_magnification, show_about_paint, show_custom_zoom_window, show_document_history, toggle_grid, toggle_thumbnail, undo, view_bitmap } from "./functions.js";
 import { show_help } from "./help.js";
 import { is_discord_embed } from "./helpers.js";
@@ -357,6 +357,7 @@ const menus = {
 				"select the whole image", "select the whole picture", "select the whole drawing", "select the whole canvas", "select the whole document",
 				"select the entire image", "select the entire picture", "select the entire drawing", "select the entire canvas", "select the entire document",
 			],
+			enabled: () => received().includes("Select"),
 			action: () => { select_all(); },
 			description: localize("Selects everything."),
 		},
