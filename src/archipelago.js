@@ -9,6 +9,7 @@ const client = new Client();
 var slotData = {};
 var final_width = 800;
 var final_height = 600;
+var recent_traps = {};
 
 // Set up an event listener for whenever a message arrives and print the plain-text content to the console.
 client.messages.on("message", (content) => {
@@ -54,7 +55,7 @@ $("<button>Connect!</button>").on("click", function () {
 				client.updateTags(client.arguments.tags.concat(["TrapLink"]));
 				client.socket.on("bounced", function (packet, data) {
 					if (packet.tags.includes("TrapLink") && data.source != client.name) {
-						handleTrap(data.trap_name, true);
+						handleTrap(data.trap_name, true, data);
 					}
 				});
 			}
@@ -99,7 +100,13 @@ function received() {
 	return items;
 }
 
-function handleTrap(name, isLinked) {
+function handleTrap(name, isLinked, packet) {
+	if (isLinked) {
+		if (recent_traps[packet.source] && recent_traps[packet.source].trap_name == name && packet.time - recent_traps[packet.source].time < 1000) {
+			return;
+		}
+		recent_traps[packet.source] = packet;
+	}
 	switch (name) {
 		case "Undo Trap":
 		case "Damage Trap":
@@ -115,11 +122,13 @@ function handleTrap(name, isLinked) {
 		case "Blue Balls Curse":
 		case "Home Trap":
 		case "Instant Death Trap":
+		case "One Hit KO":
 			if (!slotData.death_link && (!slotData.trap_blacklist || !slotData.trap_blacklist.includes("Clear Image Trap"))) {
 				clear();
 			}
 			break;
 		case "Invert Colors Trap":
+		case "Chaos Trap":
 		case "Spooky Time":
 			if (!slotData.trap_blacklist || !slotData.trap_blacklist.includes("Invert Colors Trap")) {
 				image_invert_colors();
@@ -140,7 +149,9 @@ function handleTrap(name, isLinked) {
 			}
 			break;
 		case "Help Trap":
+		case "Cutscene Trap":
 		case "Exposition Trap":
+		case "Hey! Trap":
 		case "Literature Trap":
 		case "Phone Trap":
 		case "Spam Trap":
@@ -187,7 +198,7 @@ function handleTrap(name, isLinked) {
 function onReceive(items) {
 	for (var item of items) {
 		if (item.name.endsWith("Trap")) {
-			handleTrap(item.name, false);
+			handleTrap(item.name, false, null);
 		}
 	}
 	update();
