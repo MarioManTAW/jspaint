@@ -144,6 +144,17 @@ const menus = {
 		},
 		MENU_DIVIDER,
 		{
+			label: localize("Export Session..."),
+			action: () => { window.export_local_session(); },
+			description: localize("Exports the current local session to a file."),
+		},
+		{
+			label: localize("Import Session..."),
+			action: () => { window.import_local_session(); },
+			description: localize("Imports a session file and loads it."),
+		},
+		MENU_DIVIDER,
+		{
 			label: localize("Print Pre&view"),
 			speech_recognition: [
 				"preview print", "print preview", "show print preview", "show preview of print",

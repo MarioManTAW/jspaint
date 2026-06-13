@@ -109,20 +109,31 @@ function handle_data_loss() {
 	return save_paused;
 }
 
+function save_image_to_storage(key, value) {
+	log(`Saving image to storage: ${key}`);
+	localStore.set(key, value,
+		(err) => {
+			if (err) {
+				// @ts-ignore (quotaExceeded is added by storage.js)
+				if (err.quotaExceeded) {
+					storage_quota_exceeded();
+				} else {
+					// e.g. localStorage is disabled
+					// (or there's some other error?)
+					// @TODO: show warning with "Don't tell me again" type option
+				}
+			}
+		})
+}
+
 class LocalSession {
 	constructor(session_id) {
 		this.id = session_id;
 		this.palette = palette;
 		const ls_key = `image#${session_id}`;
 		log(`Local storage key: ${ls_key}`);
-		// save image to storage
-		this.save_image_to_storage_immediately = () => {
-			const save_paused = handle_data_loss();
-			if (save_paused) {
-				return;
-			}
-			log(`Saving image to storage: ${ls_key}`);
-			localStore.set(ls_key, JSON.stringify({
+		this.collect_session_data = () => {
+			return JSON.stringify({
 				canvas: main_canvas.toDataURL("image/png"),
 				goal: goal_canvas.toDataURL("image/png"),
 				connection_info: {
@@ -132,18 +143,15 @@ class LocalSession {
 					"pass": $("[name=appass]").val()
 				},
 				colors: palette
-			}), (err) => {
-				if (err) {
-					// @ts-ignore (quotaExceeded is added by storage.js)
-					if (err.quotaExceeded) {
-						storage_quota_exceeded();
-					} else {
-						// e.g. localStorage is disabled
-						// (or there's some other error?)
-						// @TODO: show warning with "Don't tell me again" type option
-					}
-				}
 			});
+		};
+		// save image to storage
+		this.save_image_to_storage_immediately = () => {
+			const save_paused = handle_data_loss();
+			if (save_paused) {
+				return;
+			}
+			save_image_to_storage(ls_key, this.collect_session_data());
 		};
 		this.save_image_to_storage_soon = debounce(this.save_image_to_storage_immediately, 100);
 		localStore.get(ls_key, (err, data) => {
@@ -168,6 +176,7 @@ class LocalSession {
 						$("[name=ap" + i + "]").val(json_data.connection_info[i]);
 					}
 					this.palette = json_data.colors;
+					palette = this.palette;
 				}
 				catch (_) {
 					load_image_from_uri(data).then((info) => {
@@ -1092,6 +1101,91 @@ const new_local_session = () => {
 	change_url_param("local", generate_session_id());
 };
 
+const session_export_format = {
+	formatID: "application/vnd.jspaint.session",
+	mimeType: "application/json",
+	name: localize("JS Paint Session (*.appaint)"),
+	nameWithExtensions: localize("JS Paint Session (*.appaint)"),
+	extensions: ["appaint"],
+};
+
+async function export_local_session() {
+	if (!current_session || !(current_session instanceof LocalSession)) {
+		show_error_message(localize("No local session is available to export."));
+		return;
+	}
+	const session_id = current_session.id;
+
+	// Package local session data
+	let payload = {
+		version: 1, // Allows us to make changes to the formatting later without breaking compatibility
+		session_id,
+		data: current_session.collect_session_data()
+	}
+
+	const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+
+	await systemHooks.showSaveFileDialog({
+		dialogTitle: localize("Export Session"),
+		formats: [session_export_format],
+		defaultFileName: `${session_id}`,
+		getBlob: () => Promise.resolve(blob),
+	});
+}
+
+async function import_local_session() {
+	const { file } = await systemHooks.showOpenFileDialog({
+		formats: [session_export_format],
+	});
+	if (!file) {
+		return;
+	}
+
+	let payload;
+	try {
+		payload = JSON.parse(await file.text());
+	} catch (_error) {
+		show_error_message(localize("Invalid session file format."));
+		return;
+	}
+
+	if (payload.version !== 1) {
+		show_error_message(localize("Invalid session file version. This file may have been created by a newer version of the software."));
+		return;
+	}
+
+	if (!payload || !payload.session_id || typeof payload.session_id !== "string" || !payload.data) {
+		show_error_message(localize(`Invalid session file. ${JSON.stringify(payload)}`));
+		return;
+	}
+	try {
+		// We want to retain the existing connection info
+		let payload_data = JSON.parse(payload.data);
+		let existing_connection_info = JSON.parse(current_session.collect_session_data()).connection_info;
+		payload_data.connection_info = existing_connection_info;
+		payload.data = JSON.stringify(payload_data);
+	}
+	catch (e) {
+		show_error_message(localize(`Error when retaining connection info: ${e.message}`), e);
+	}
+
+	// Ends the session to both ensure we don't get conflicting sets and to ensure that we update the session even if the session ID is the same
+	end_current_session();
+
+	try {
+		save_image_to_storage(`image#${payload.session_id}`, payload.data);
+		$colorbox.rebuild_palette(JSON.parse(payload.data).colors);
+	} catch (error) {
+		show_error_message(localize("Failed to write session data to local storage."), error);
+		return;
+	}
+
+	// Switch to the imported session
+	change_url_param("local", payload.session_id);
+}
+
+window.export_local_session = export_local_session;
+window.import_local_session = import_local_session;
 // @TODO: Session GUI
 // @TODO: Indicate when the session ID is invalid
 // @TODO: Indicate when the session switches
