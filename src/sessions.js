@@ -176,6 +176,7 @@ class LocalSession {
 						$("[name=ap" + i + "]").val(json_data.connection_info[i]);
 					}
 					this.palette = json_data.colors;
+					palette = this.palette;
 				}
 				catch (_) {
 					load_image_from_uri(data).then((info) => {
@@ -1173,6 +1174,7 @@ async function import_local_session() {
 
 	try {
 		save_image_to_storage(`image#${payload.session_id}`, payload.data);
+		$colorbox.rebuild_palette(JSON.parse(payload.data).colors);
 	} catch (error) {
 		show_error_message(localize("Failed to write session data to local storage."), error);
 		return;
@@ -1180,8 +1182,6 @@ async function import_local_session() {
 
 	// Switch to the imported session
 	change_url_param("local", payload.session_id);
-	// @TODO: Updating palette does not work while in the same window session, this was an existing bug
-	current_session.palette = payload.data.palette;
 }
 
 window.export_local_session = export_local_session;
