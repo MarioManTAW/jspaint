@@ -1174,7 +1174,9 @@ async function import_local_session() {
 
 	try {
 		save_image_to_storage(`image#${payload.session_id}`, payload.data);
-		$colorbox.rebuild_palette(JSON.parse(payload.data).colors);
+		var c = JSON.parse(payload.data).colors;
+		while (c.length < palette.length) c.push("#FFFFFF");
+		$colorbox.rebuild_palette(c);
 	} catch (error) {
 		show_error_message(localize("Failed to write session data to local storage."), error);
 		return;
