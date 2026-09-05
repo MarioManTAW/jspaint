@@ -205,7 +205,7 @@ function onReceive(items) {
 }
 
 function onMessage(message) {
-	$("#text-log").append("<br>" + message);
+	$("#text-log").append("<br>" + $("<p>").text(message).html());
 }
 
 function update() {
