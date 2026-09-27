@@ -25,7 +25,13 @@ $("<button>Connect!</button>").on("click", function () {
 	client.login($("[name=aphost]").val() + ":" + $("[name=apport]").val(), $("[name=apslot]").val(), "Paint", { "password": $("[name=appass]").val() })
 		.then(function (e) {
 			console.log("Connected to the Archipelago server!", e);
-			localStorage.setItem("datapackage_cache", JSON.stringify(client.package.exportPackage()));
+			try {
+				localStorage.setItem("datapackage_cache", JSON.stringify(client.package.exportPackage()));
+			}
+			catch (ex) {
+				console.log("Unable to cache datapackage.");
+				console.log(ex);
+			}
 			slotData = e;
 			if (slotData.version) $("#appaint-version").text("APWorld Version " + slotData.version);
 			if (slotData.final_width) final_width = slotData.final_width;
