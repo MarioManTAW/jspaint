@@ -11,6 +11,8 @@ var final_width = 800;
 var final_height = 600;
 var recent_traps = {};
 
+client.package.importPackage(JSON.parse(localStorage.getItem("datapackage_cache") ?? "{}"));
+
 // Set up an event listener for whenever a message arrives and print the plain-text content to the console.
 client.messages.on("message", (content) => {
 	console.log(content);
@@ -23,6 +25,7 @@ $("<button>Connect!</button>").on("click", function () {
 	client.login($("[name=aphost]").val() + ":" + $("[name=apport]").val(), $("[name=apslot]").val(), "Paint", { "password": $("[name=appass]").val() })
 		.then(function (e) {
 			console.log("Connected to the Archipelago server!", e);
+			localStorage.setItem("datapackage_cache", JSON.stringify(client.package.exportPackage()));
 			slotData = e;
 			if (slotData.version) $("#appaint-version").text("APWorld Version " + slotData.version);
 			if (slotData.final_width) final_width = slotData.final_width;
